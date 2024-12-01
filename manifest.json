@@ -1,0 +1,28 @@
+{
+    "manifest_version": 3,
+    "name": "AI Tab Manager",
+    "version": "1.0",
+    "description": "AI-based Tab Manager for grouping similar tabs into workspaces.",
+    "permissions": ["tabs", "storage"],
+    "host_permissions": ["<all_urls>"],
+    "background": {
+      "service_worker": "background.js",
+      "type": "module"
+    },
+    "action": {
+      "default_popup": "popup.html",
+      "default_popup_width": 600,
+      "default_popup_height": 600,
+      "default_icon": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+      }
+    },
+    "icons": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  }
+  
