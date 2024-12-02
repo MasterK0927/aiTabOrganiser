@@ -6,7 +6,7 @@ Ever find yourself drowning in countless open tabs across multiple projects? AI 
 
 ## Key Features
 
-- **Workspace Creation**: Automatically group your tabs into meaningful workspaces, powered by similarity prediction Machine Learning model.
+- **Workspace Creation**: Automatically group your tabs into meaningful workspaces, powered by similarity prediction algorithm. 
 - **Easy Search**: Quickly find and switch between workspaces in a single click.
 - **Tab Preservation**: Keep your tab collections safe and organized.
 
