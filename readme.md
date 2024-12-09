@@ -1,3 +1,5 @@
+This is v1 release for chromium based browsers, I am preparing it mozilla compatible counterpart too. 
+
 # AI Tab Organiser
 
 ## Overview
