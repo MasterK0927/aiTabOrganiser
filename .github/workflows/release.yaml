@@ -2,9 +2,8 @@ name: Build and Release Chrome Extension
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    tags:
+      - 'v*'
 
 jobs:
   build:
@@ -31,6 +30,14 @@ jobs:
       - name: List directory contents
         run: ls -alh
 
+      - name: Read Changelog
+        id: read_changelog
+        run: |
+          changelog=$(cat CHANGELOG.md)
+          echo "changelog<<EOF" >> $GITHUB_ENV
+          echo "$changelog" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Upload CRX Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -43,7 +50,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ github.run_number }}
+          tag: v${{ github.run_number }}
+          name: Release v${{ github.run_number }}
           release_name: Release v${{ github.run_number }}
           draft: false
           prerelease: false
