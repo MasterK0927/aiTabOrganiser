@@ -29,11 +29,11 @@ jobs:
         run: npm run build:crx
 
       - name: Upload CRX Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: aiTabManager-crx
           path: aiTabManager.crx
-          
+
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
