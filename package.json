@@ -3,6 +3,6 @@
     "crx": "^5.0.1"
   },
   "scripts": {
-    "build:crx": "crx pack ./ --key=release-key.pem --out=extension.crx"
+    "build:crx": "crx3 manifest.json -p release-key.pem -o extension.crx"
   }
 }
