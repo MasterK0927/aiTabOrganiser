@@ -1,3 +1,5 @@
-Added the workflow for the release
+02/02/2025 (v1.1)
 
-to be updated later
+- Adds Dark Mode
+- Adds tab sandboxing
+- Adds tab stacking
