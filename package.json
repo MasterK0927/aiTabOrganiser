@@ -4,6 +4,6 @@
     "crx3": "^1.1.3"
   },
   "scripts": {
-    "build:crx": "crx pack ./ --private-key=release-key.pem --out=extension.crx"
+    "build:crx": "crx pack ./ --private-key=release-key.pem extension.crx"
   }
 }
