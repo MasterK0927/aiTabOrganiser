@@ -30,19 +30,16 @@ jobs:
       - name: List directory contents
         run: ls -alh
 
-      - name: Read Changelog
-        id: read_changelog
-        run: |
-          changelog=$(cat CHANGELOG.md)
-          echo "changelog<<EOF" >> $GITHUB_ENV
-          echo "$changelog" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
       - name: Upload CRX Artifact
         uses: actions/upload-artifact@v4
         with:
           name: aiTabOrganiser-crx
           path: aiTabOrganiser.crx
+
+      - name: Read Changelog
+        id: read_changelog
+        run: |
+          changelog=$(cat CHANGELOG.md)
 
       - name: Create GitHub Release
         id: create_release
@@ -50,8 +47,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ github.ref }}
-          release_name: Release v${{ github.ref }}
+          release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
 
