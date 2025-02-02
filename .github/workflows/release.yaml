@@ -28,6 +28,9 @@ jobs:
       - name: Build .crx file
         run: npm run build:crx
 
+      - name: List directory contents
+        run: ls -alh
+
       - name: Upload CRX Artifact
         uses: actions/upload-artifact@v4
         with:
