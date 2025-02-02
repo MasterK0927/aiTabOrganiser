@@ -1,3 +1,16 @@
+if (localStorage.getItem("darkMode") === "enabled") {
+  document.documentElement.classList.add("dark-mode");
+}
+
+const darkModeToggle = document.getElementById("dark-mode-toggle");
+if (darkModeToggle) {
+  darkModeToggle.addEventListener("click", () => {
+    document.documentElement.classList.toggle("dark-mode");
+    const isDark = document.documentElement.classList.contains("dark-mode");
+    localStorage.setItem("darkMode", isDark ? "enabled" : "disabled");
+  });
+}
+
 const workspaceList = document.getElementById("workspace-list");
 const searchWorkspaces = document.getElementById("search-workspaces");
 const tabsContainer = document.getElementById("tabs-container");
