@@ -1,8 +1,9 @@
 {
   "devDependencies": {
-    "crx": "^5.0.1"
+    "crx": "^5.0.1",
+    "crx3": "^1.1.3"
   },
   "scripts": {
-    "build:crx": "crx pack -o extension.crx -p release-key.pem"
+    "build:crx": "crx pack ./ --private-key=release-key.pem --out=extension.crx"
   }
 }
