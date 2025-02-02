@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '20'
 
       - name: Install dependencies
         run: npm install
@@ -31,8 +31,8 @@ jobs:
       - name: Upload CRX Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: aiTabManager-crx
-          path: aiTabManager.crx
+          name: extension-crx
+          path: extension.crx
 
       - name: Create GitHub Release
         id: create_release
@@ -51,6 +51,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./aiTabManager.crx
-          asset_name: aiTabManager.crx
+          asset_path: ./extension.crx
+          asset_name: extension.crx
           asset_content_type: application/octet-stream
