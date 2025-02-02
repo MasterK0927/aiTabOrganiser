@@ -34,8 +34,8 @@ jobs:
       - name: Upload CRX Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: aiTabManager-crx
-          path: aiTabManager.crx
+          name: aiTabOrganiser-crx
+          path: aiTabOrganiser.crx
 
       - name: Create GitHub Release
         id: create_release
@@ -54,6 +54,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./aiTabManager.crx
-          asset_name: aiTabManager.crx
+          asset_path: ./aiTabOrganiser.crx
+          asset_name: aiTabOrganiser.crx
           asset_content_type: application/octet-stream
