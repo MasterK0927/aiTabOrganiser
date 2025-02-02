@@ -1,2 +1,3 @@
 node_modules
 release-key.pem
+package-lock.json
