@@ -53,6 +53,13 @@ export const SETTINGS_ONBOARDING_STEPS = [
     position: 'center'
   },
   {
+    id: 'tab-source',
+    element: '#tab-source',
+    title: 'Tab Source',
+    content: 'Choose whether to analyze tabs from all windows or just the current window.',
+    position: 'center'
+  },
+  {
     id: 'naming-strategy',
     element: '#naming-strategy',
     title: 'Naming Strategy',
