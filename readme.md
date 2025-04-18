@@ -6,9 +6,13 @@ Ever find yourself drowning in countless open tabs across multiple projects? AI 
 
 ## Key Features
 
-- **Workspace Creation**: Automatically group your tabs into meaningful workspaces, powered by similarity prediction algorithm. 
-- **Easy Search**: Quickly find and switch between workspaces in a single click.
-- **Tab Preservation**: Keep your tab collections safe and organized.
+- **Intelligent Tab Grouping**: Automatically organize tabs into meaningful workspaces based on content similarity
+- **Workspace Management**: Easily create, rename, and switch between different tab collections
+- **Tab Preview**: View tab contents without switching context
+- **Dark Mode Support**: Full light/dark theme integration
+- **Tab Sandboxing**: Safely isolate tab sessions
+- **Tab Stacking**: Organize related tabs in vertical stacks
+- **Cross-browser Support**: Works on Chrome/Chromium and Firefox browsers
 
 ## How It Works?
 
@@ -21,23 +25,23 @@ When you click the "Analyze Tabs" button, the extension:
 
 ### Workspace Management
 
-- **Rename Workspaces**: Click on the workspace name and type a new one
-- **Open Workspace**: Switch to a specific set of tabs with one click
-- **Delete Workspace**: Remove workspaces you no longer need
+- **View Workspaces**: See all your organized tab collections in one place
+- **Rename Workspaces**: Customize workspace names to match your projects
+- **Switch Between Workspaces**: Open all tabs in a workspace with one click
+- **Delete Workspaces**: Remove workspaces you no longer need
 
 ## Installation
 
-<!-- ### From Chrome Web Store (Coming Soon!)
-1. Open Chrome Web Store
-2. Search "Tab Workspace Manager"
-3. Click "Add to Chrome" -->
-
-### Manual Installation
-1. Navigate to `pack_extension` folder
-2. Save the `.crx` file
-3. Open Chrome and go to `chrome://extensions/`
-4. Enable "Developer Mode"
-5. Drag and drop the saved `.crx` file into `chrome://extensions/` window
+### From Releases
+1. Download the latest release for your browser from the [Releases page](../../releases)
+2. For Chrome/Chromium:
+   - Go to `chrome://extensions/`
+   - Enable "Developer Mode"
+   - Drag and drop the downloaded `.crx` file
+3. For Firefox:
+   - Go to `about:addons`
+   - Click the gear icon and select "Install Add-on From File..."
+   - Select the downloaded `.xpi` file
 
 ### Common Issues
 
@@ -66,12 +70,31 @@ Love the project? Here's how you can help:
 ### Development Setup
 
 ```bash
-# Clone the repo
-git clone https://github.com/masterK0927/aiTabOrganiser
+# Clone the repository
+git clone https://github.com/masterK0927/aiTabOrganiser.git
+
+# Navigate to project directory
+cd aiTabOrganiser
+
+# Install dependencies
+npm install
+
+# Give permission to the build script
+chmod +x build.sh
+
+# Build the extension for all supported browsers
+# This will create a `dist` folder with the extension files
+# dist/packages
+./build.sh all
+
+# Build the extension for a specific browser
+./build.sh chrome
+# or
+./build.sh firefox
+```
 
 ## Roadmap for future development
 
-- [ ] Multiple window support
 - [ ] Cloud sync for workspaces
 - [ ] Customizable workspace rules
 - [ ] Export/Import workspace configurations
@@ -89,10 +112,3 @@ MIT License - Free for personal and commercial use.
 ---
 
 Made by [Keshav]
-
-## Changelog
-
-### v1.0.0
-- Initial release
-- Basic workspace creation
-- Tab switching functionality
