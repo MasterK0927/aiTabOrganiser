@@ -11,7 +11,7 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_popup_width": 600,
+    "default_popup_width": 800,
     "default_popup_height": 600,
     "default_icon": {
       "16": "icons/icon16.png",
