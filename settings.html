@@ -134,6 +134,36 @@
             </div>
             
             <div class="settings-option">
+              <label for="tab-source">Tab Source</label>
+              <div class="settings-control">
+                <select id="tab-source">
+                  <option value="current-window">Current Window Only</option>
+                  <option value="all-windows">All Windows</option>
+                  <option value="specific-window">Select Specific Window</option>
+                </select>
+              </div>
+              <p class="settings-description">Choose which windows to include when analyzing tabs.</p>
+            </div>
+
+            <div class="settings-option" id="specific-window-container" style="display: none;">
+              <label for="specific-window">Select Window</label>
+              <div class="settings-control">
+                <div class="modern-window-selector">
+                  <select id="specific-window">
+                    <!-- Will be populated dynamically -->
+                  </select>
+                  <div class="window-selector-footer">
+                    <span class="window-counter" id="window-count">Loading...</span>
+                    <button id="refresh-windows" class="refresh-windows-btn">
+                      <span class="refresh-icon">↻</span> Refresh List
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <p class="settings-description">Select the specific browser window to analyze.</p>
+            </div>
+            
+            <div class="settings-option">
               <label for="export-import">Export/Import Settings</label>
               <div class="settings-control button-group">
                 <button id="export-settings" class="secondary-button">Export</button>
