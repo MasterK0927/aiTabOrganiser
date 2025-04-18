@@ -1,3 +1,5 @@
+import { getStorage } from "./browserAPI.js";
+
 const STORAGE_KEY = "ai_tab_manager_workspaces";
 
 /**
@@ -5,8 +7,12 @@ const STORAGE_KEY = "ai_tab_manager_workspaces";
  * @returns {Promise<Array>} - A promise that resolves to the array of workspaces.
  */
 export async function loadWorkspaces() {
-  const result = await chrome.storage.local.get([STORAGE_KEY]);
-  return result[STORAGE_KEY] || [];
+  return new Promise((resolve) => {
+    const storage = getStorage();
+    storage.get([STORAGE_KEY], (result) => {
+      resolve(result[STORAGE_KEY] || []);
+    });
+  });
 }
 
 /**
@@ -15,7 +21,12 @@ export async function loadWorkspaces() {
  * @returns {Promise<void>}
  */
 export async function saveWorkspaces(workspaces) {
-  await chrome.storage.local.set({ [STORAGE_KEY]: workspaces });
+  return new Promise((resolve) => {
+    const storage = getStorage();
+    storage.set({ [STORAGE_KEY]: workspaces }, () => {
+      resolve();
+    });
+  });
 }
 
 /**

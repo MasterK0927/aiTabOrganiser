@@ -1,3 +1,26 @@
+import { sendMessage, isFirefox, createTab } from './utils/browserAPI.js';
+
+// Firefox specific debugging
+if (isFirefox) {
+  window.addEventListener('load', () => {
+    console.log("DOM fully loaded in Firefox");
+    
+    const searchBar = document.getElementById("search-workspaces");
+    if (searchBar) {
+      console.log("Search bar found:", searchBar);
+      console.log("Search bar computed style:", window.getComputedStyle(searchBar));
+    } else {
+      console.error("Search bar not found in DOM");
+    }
+    
+    const searchContainer = document.querySelector(".search-container");
+    if (searchContainer) {
+      console.log("Search container found:", searchContainer);
+      console.log("Search container style:", window.getComputedStyle(searchContainer));
+    }
+  });
+}
+
 if (localStorage.getItem("darkMode") === "enabled") {
   document.documentElement.classList.add("dark-mode");
 }
@@ -16,7 +39,8 @@ const searchWorkspaces = document.getElementById("search-workspaces");
 const tabsContainer = document.getElementById("tabs-container");
 const statusMessage = document.getElementById("status-message");
 
-let activeWorkspaceIndex = -1;
+let activeWorkspaceIndex = 0;
+let currentWorkspaces = [];
 
 function showStatus(message, isError = false) {
   statusMessage.textContent = message;
@@ -60,9 +84,11 @@ function renderTabs(tabs, parentElement, level = 0) {
     tabName.className = "tab-name";
     tabName.textContent = tab.title || "Untitled Tab";
     tabName.title = tab.url;
-    tabName.onclick = (e) => {
+    tabName.onclick = async (e) => {
       e.preventDefault();
-      if (tab.url) chrome.tabs.create({ url: tab.url });
+      if (tab.url) {
+        await createTab({ url: tab.url });
+      }
     };
     tabCard.appendChild(tabName);
     
@@ -85,12 +111,43 @@ function renderTabs(tabs, parentElement, level = 0) {
   parentElement.appendChild(tabsList);
 }
 
+function showWorkspaceTabs(index) {
+  if (!currentWorkspaces || currentWorkspaces.length === 0) return;
+  
+  if (index < 0 || index >= currentWorkspaces.length) {
+    index = 0;
+  }
+  
+  activeWorkspaceIndex = index;
+  
+  const workspaceCards = document.querySelectorAll('.workspace-card');
+  workspaceCards.forEach((card, i) => {
+    if (i === index) {
+      card.classList.add('active');
+    } else {
+      card.classList.remove('active');
+    }
+  });
+  
+  tabsContainer.innerHTML = "";
+  
+  const workspace = currentWorkspaces[index];
+  
+  const workspaceHeader = document.createElement("div");
+  workspaceHeader.className = "workspace-header";
+  workspaceHeader.textContent = workspace.name;
+  tabsContainer.appendChild(workspaceHeader);
+  
+  renderTabs(workspace.tabs, tabsContainer);
+}
+
 async function renderWorkspaces(workspaces, filter = "") {
   workspaceList.innerHTML = "";
-  tabsContainer.innerHTML = "";
   const filteredWorkspaces = workspaces.filter(w =>
     w.name.toLowerCase().includes(filter.toLowerCase())
   );
+  
+  currentWorkspaces = filteredWorkspaces;
   
   if (filteredWorkspaces.length === 0) {
     const noWorkspacesMessage = document.createElement("div");
@@ -99,12 +156,22 @@ async function renderWorkspaces(workspaces, filter = "") {
       ? "No matching workspaces found." 
       : "No workspaces yet. Click 'Analyze Tabs' to create workspaces.";
     workspaceList.appendChild(noWorkspacesMessage);
+    tabsContainer.innerHTML = "<div class='no-workspaces'>No workspaces available.</div>";
     return;
   }
   
   filteredWorkspaces.forEach((workspace, index) => {
     const workspaceCard = document.createElement("div");
-    workspaceCard.className = `workspace-card ${index === 0 ? "active" : ""}`;
+    workspaceCard.className = `workspace-card ${index === activeWorkspaceIndex ? "active" : ""}`;
+    workspaceCard.setAttribute("data-index", index);
+    
+    // Make the entire card clickable to switch workspaces
+    workspaceCard.addEventListener("click", (e) => {
+      // Don't trigger if clicking on buttons or input
+      if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') {
+        showWorkspaceTabs(index);
+      }
+    });
   
     const title = document.createElement("input");
     title.type = "text";
@@ -113,11 +180,16 @@ async function renderWorkspaces(workspaces, filter = "") {
     title.addEventListener("change", async () => {
       workspaces[index].name = title.value;
       try {
-        await chrome.runtime.sendMessage({ 
+        await sendMessage({ 
           action: "save_workspaces", 
           workspaces 
         });
         showStatus("Workspace renamed successfully");
+        
+        if (index === activeWorkspaceIndex) {
+          const header = tabsContainer.querySelector('.workspace-header');
+          if (header) header.textContent = title.value;
+        }
       } catch (error) {
         showStatus("Failed to rename workspace", true);
         title.value = workspace.name;
@@ -135,9 +207,10 @@ async function renderWorkspaces(workspaces, filter = "") {
     const openSandboxButton = document.createElement("button");
     openSandboxButton.textContent = "Open (sandboxed)";
     openSandboxButton.className = "open-button";
-    openSandboxButton.onclick = async () => {
+    openSandboxButton.onclick = async (e) => {
+      e.stopPropagation();
       try {
-        const response = await chrome.runtime.sendMessage({
+        const response = await sendMessage({
           action: "switch_workspace_sandboxed",
           workspaceIndex: index,
         });
@@ -151,16 +224,25 @@ async function renderWorkspaces(workspaces, filter = "") {
     const deleteButton = document.createElement("button");
     deleteButton.textContent = "×";
     deleteButton.className = "delete-button";
-    deleteButton.onclick = async () => {
+    deleteButton.onclick = async (e) => {
+      e.stopPropagation();
       if (confirm("Delete this workspace?")) {
         try {
-          const response = await chrome.runtime.sendMessage({
+          const response = await sendMessage({
             action: "delete_workspace",
             workspaceIndex: index,
           });
           if (response.error) throw new Error(response.error);
           showStatus("Workspace deleted");
-          renderWorkspaces(response.workspaces);
+          
+          if (activeWorkspaceIndex >= response.workspaces.length) {
+            activeWorkspaceIndex = Math.max(0, response.workspaces.length - 1);
+          }
+          
+          await renderWorkspaces(response.workspaces);
+          if (response.workspaces.length > 0) {
+            showWorkspaceTabs(activeWorkspaceIndex);
+          }
         } catch (error) {
           showStatus("Failed to delete workspace", true);
         }
@@ -176,18 +258,12 @@ async function renderWorkspaces(workspaces, filter = "") {
     workspaceList.appendChild(workspaceCard);
   });
   
-  filteredWorkspaces.forEach((workspace) => {
-    const workspaceHeader = document.createElement("div");
-    workspaceHeader.className = "workspace-header";
-    workspaceHeader.textContent = workspace.name;
-    tabsContainer.appendChild(workspaceHeader);
-    renderTabs(workspace.tabs, tabsContainer);
-  });
+  showWorkspaceTabs(activeWorkspaceIndex);
 }
 
 async function loadAndRenderWorkspaces(filter = "") {
   try {
-    const response = await chrome.runtime.sendMessage({ action: "get_workspaces" });
+    const response = await sendMessage({ action: "get_workspaces" });
     if (response.error) throw new Error(response.error);
     await renderWorkspaces(response.workspaces || [], filter);
   } catch (error) {
@@ -197,9 +273,17 @@ async function loadAndRenderWorkspaces(filter = "") {
 
 document.getElementById("analyze-tabs").addEventListener("click", async () => {
   try {
-    const response = await chrome.runtime.sendMessage({ action: "analyze_tabs" });
+    const response = await sendMessage({ action: "analyze_tabs" });
     if (response.error) throw new Error(response.error);
-    showStatus("Tabs analyzed and grouped successfully");
+    
+    const browserName = isFirefox ? "Firefox" : "Chrome";
+    const tabGroupMsg = isFirefox 
+      ? " (note: Firefox doesn't support native tab grouping)" 
+      : " and grouped";
+    
+    showStatus(`Tabs analyzed${tabGroupMsg} successfully in ${browserName}`);
+    
+    activeWorkspaceIndex = 0;
     await loadAndRenderWorkspaces();
   } catch (error) {
     showStatus("Failed to analyze tabs", true);

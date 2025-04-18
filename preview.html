@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Website Preview</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .preview-container {
+      max-width: 90%;
+      max-height: 90vh;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: white;
+    }
+    
+    .iframe-container {
+      width: 100%;
+      height: 100%;
+      min-height: 80vh;
+    }
+    
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    
+    .preview-header {
+      padding: 15px;
+      background-color: #eba925;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .preview-title {
+      font-size: 16px;
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 80%;
+    }
+    
+    .close-button {
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+    }
+    
+    .error-message {
+      padding: 20px;
+      text-align: center;
+      color: #d9534f;
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-container">
+    <div class="preview-header">
+      <h1 class="preview-title" id="preview-title">Website Preview</h1>
+      <button class="close-button" id="close-button">×</button>
+    </div>
+    <div class="iframe-container" id="iframe-container">
+      <!-- iframe will be inserted here -->
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const url = params.get('url');
+      const title = params.get('title') || 'Website Preview';
+      
+      document.getElementById('preview-title').textContent = title;
+      document.getElementById('close-button').addEventListener('click', () => {
+        window.close();
+      });
+      
+      if (url) {
+        try {
+          const iframe = document.createElement('iframe');
+          iframe.src = url;
+          iframe.setAttribute('sandbox', 'allow-scripts');
+          iframe.setAttribute('referrerpolicy', 'no-referrer');
+          document.getElementById('iframe-container').appendChild(iframe);
+        } catch (error) {
+          document.getElementById('iframe-container').innerHTML = 
+            `<div class="error-message">Error loading preview: ${error.message}</div>`;
+        }
+      } else {
+        document.getElementById('iframe-container').innerHTML = 
+          '<div class="error-message">No URL provided for preview</div>';
+      }
+    });
+  </script>
+</body>
+</html>
