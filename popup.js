@@ -1,4 +1,4 @@
-import { sendMessage, isFirefox, createTab } from './utils/browserAPI.js';
+import { sendMessage, isFirefox, createTab, getAllWindows, getCurrentWindow, getStorage } from './utils/browserAPI.js';
 import { hasCompletedOnboarding, markOnboardingCompleted, ONBOARDING_STEPS } from './utils/onboarding.js';
 
 if (isFirefox) {
@@ -41,6 +41,15 @@ function showStatus(message, isError = false) {
   setTimeout(() => {
     statusElement.className = statusElement.className.replace(" visible", "");
   }, 3000);
+}
+
+function showLoading(show) {
+  const loadingSpinner = document.getElementById("loading-spinner");
+  if (show) {
+    loadingSpinner.classList.remove("hidden");
+  } else {
+    loadingSpinner.classList.add("hidden");
+  }
 }
 
 function debounce(func, delay) {
@@ -121,15 +130,18 @@ function showWorkspaceTabs(index) {
     }
   });
   
-  tabsContainer.innerHTML = "";
+  // Get the tabs container but keep the header separate
+  const tabsContainer = document.getElementById('tabs-container');
+  tabsContainer.innerHTML = ""; // Clear only tab content
   
   const workspace = currentWorkspaces[index];
   
-  const workspaceHeader = document.createElement("div");
-  workspaceHeader.className = "workspace-header";
-  workspaceHeader.textContent = workspace.name;
-  tabsContainer.appendChild(workspaceHeader);
+  // Update just the title text in the header
+  const tabsHeader = document.querySelector('.tabs-header');
+  const workspaceTitle = tabsHeader.querySelector('.workspace-title');
+  workspaceTitle.textContent = `Tabs in ${workspace.name}`;
   
+  // Render the tabs
   renderTabs(workspace.tabs, tabsContainer);
 }
 
@@ -403,6 +415,140 @@ async function finishOnboarding() {
   showStatus('Welcome to AI Tab Manager!');
 }
 
+async function addWindowSelector() {
+  const windowSelector = document.createElement('div');
+  windowSelector.className = 'window-selector-micro';
+  
+  const selectorRow = document.createElement('div');
+  selectorRow.className = 'window-micro-row';
+  
+  const label = document.createElement('span');
+  label.className = 'window-micro-label';
+  label.innerHTML = `<span class="window-icon">⊞</span>`;
+  label.title = "Select which browser window to analyze tabs from";
+  selectorRow.appendChild(label);
+  
+  const windowSelect = document.createElement('select');
+  windowSelect.id = 'window-select';
+  windowSelect.className = 'window-micro-select';
+  selectorRow.appendChild(windowSelect);
+  
+  const refreshBtn = document.createElement('button');
+  refreshBtn.className = 'window-micro-refresh';
+  refreshBtn.innerHTML = `<span class="refresh-icon">↻</span>`;
+  refreshBtn.title = "Refresh window list";
+  selectorRow.appendChild(refreshBtn);
+  
+  windowSelector.appendChild(selectorRow);
+  
+  const searchContainer = document.querySelector('.search-container');
+  searchContainer.parentNode.insertBefore(windowSelector, searchContainer);
+  
+  try {
+    await populateWindowSelector(windowSelect, refreshBtn);
+  } catch (error) {
+    console.error("Failed to load windows:", error);
+    windowSelect.innerHTML = '<option value="">Error loading windows</option>';
+  }
+}
+
+async function populateWindowSelector(windowSelect, refreshBtn) {
+  const windows = await getAllWindows();
+  const currentWindow = await getCurrentWindow();
+  windowSelect.innerHTML = '';
+  
+  if (windows.length === 0) {
+    windowSelect.innerHTML = '<option value="">No windows found</option>';
+    return;
+  }
+  
+  windows.sort((a, b) => {
+    if (a.id === currentWindow.id) return -1;
+    if (b.id === currentWindow.id) return 1;
+    return b.tabs.length - a.tabs.length;
+  });
+  
+  windows.forEach(window => {
+    const tabCount = window.tabs.length;
+    const isCurrent = window.id === currentWindow.id;
+    
+    let displayName = '';
+    let displayDomain = '';
+    
+    try {
+      if (window.tabs && window.tabs.length > 0) {
+        const activeTab = window.tabs.find(tab => tab.active) || window.tabs[0];
+        
+        const url = new URL(activeTab.url);
+        displayDomain = url.hostname.replace('www.', '');
+        
+        const titleWords = activeTab.title.split(/\s+/);
+        displayName = titleWords.length > 1 
+          ? titleWords.slice(0, 2).join(' ') 
+          : (titleWords[0] || 'Window');
+          
+        if (displayName.length > 12) {
+          displayName = displayName.substring(0, 12) + '...';
+        }
+      }
+    } catch (e) {
+      displayName = isCurrent ? 'Current' : 'Window';
+      displayDomain = '';
+    }
+    
+    const option = document.createElement('option');
+    option.value = window.id;
+    
+    option.textContent = isCurrent 
+      ? `📍 Current (${tabCount})` 
+      : displayDomain 
+        ? `${displayDomain} (${tabCount})` 
+        : `Window ${window.id} (${tabCount})`;
+    
+    if (isCurrent) {
+      option.setAttribute('selected', 'selected');
+    }
+    
+    windowSelect.appendChild(option);
+  });
+  
+  const storage = getStorage();
+  storage.get(['tab_source', 'specific_window_id'], function(data) {
+    if (data.tab_source === 'specific-window' && data.specific_window_id) {
+      const option = windowSelect.querySelector(`option[value="${data.specific_window_id}"]`);
+      if (option) {
+        windowSelect.value = data.specific_window_id;
+      }
+    }
+  });
+  
+  windowSelect.addEventListener('change', function() {
+    storage.set({ 
+      'tab_source': 'specific-window',
+      'specific_window_id': windowSelect.value 
+    });
+    
+    const selectedOption = windowSelect.options[windowSelect.selectedIndex];
+    showStatus(`Now using ${selectedOption.textContent} for tab organization`);
+  });
+  
+  refreshBtn.addEventListener('click', async function() {
+    refreshBtn.disabled = true;
+    refreshBtn.classList.add('spinning');
+    
+    try {
+      await populateWindowSelector(windowSelect, refreshBtn);
+      showStatus("Window list refreshed");
+    } catch (error) {
+      console.error("Failed to refresh windows:", error);
+      showStatus("Failed to refresh windows", true);
+    } finally {
+      refreshBtn.disabled = false;
+      refreshBtn.classList.remove('spinning');
+    }
+  });
+}
+
 async function initializeApp() {
   if (localStorage.getItem("darkMode") === "enabled") {
     document.documentElement.classList.add("dark-mode");
@@ -422,6 +568,11 @@ async function initializeApp() {
   const completed = await hasCompletedOnboarding();
   if (!completed) {
     startOnboarding();
+  }
+  
+  const response = await sendMessage({ action: "get_settings" });
+  if (response.settings && response.settings.tabSource === 'specific-window') {
+    addWindowSelector();
   }
   
   document.getElementById("settings-button").addEventListener("click", () => {
@@ -464,19 +615,33 @@ document.getElementById("analyze-tabs").addEventListener("click", async (e) => {
   }, 1500);
   
   try {
+    showLoading(true);
     const response = await sendMessage({ action: "analyze_tabs" });
-    if (response.error) throw new Error(response.error);
+    showLoading(false);
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
     
     const browserName = isFirefox ? "Firefox" : "Chrome";
     const tabGroupMsg = isFirefox 
       ? " (note: Firefox doesn't support native tab grouping)" 
       : " and grouped";
-    
-    showStatus(`Tabs analyzed${tabGroupMsg} successfully in ${browserName}`);
+
+    let sourceMsg = " from all windows";
+    if (response.source === 'current-window') {
+      sourceMsg = " from current window";
+    } else if (response.source.startsWith('specific-window-')) {
+      const windowId = response.source.split('-')[2];
+      sourceMsg = ` from selected window (ID: ${windowId})`;
+    }
+
+    showStatus(`Tabs analyzed${tabGroupMsg} successfully${sourceMsg} in ${browserName}`);
     
     activeWorkspaceIndex = 0;
     await loadAndRenderWorkspaces();
   } catch (error) {
+    showLoading(false);
     showStatus("Failed to analyze tabs", true);
   }
 });
