@@ -24,8 +24,18 @@ export function getStorage() {
     else if (typeof chrome !== 'undefined' && chrome && chrome.storage) {
       return chrome.storage.local;
     }
-    console.error("No browser storage API available");
-    return null;
+    // fallback
+    console.warn("No browser storage API available, returning mock storage");
+    return {
+      get: (keys, callback) => {
+        console.warn("Using mock storage get");
+        callback({});
+      },
+      set: (items, callback) => {
+        console.warn("Using mock storage set");
+        if (callback) callback();
+      }
+    };
   } catch (error) {
     console.error("Error accessing browser storage API:", error);
     return null;
@@ -77,6 +87,22 @@ export function getCurrentWindow() {
     return new Promise((resolve) => {
       chrome.windows.getCurrent((window) => {
         resolve(window);
+      });
+    });
+  }
+}
+
+/**
+ * Get all windows with consistent interface
+ * @returns {Promise<Array>} - Promise resolving to array of windows
+ */
+export function getAllWindows() {
+  if (isFirefox) {
+    return browser.windows.getAll({ populate: true });
+  } else {
+    return new Promise((resolve) => {
+      chrome.windows.getAll({ populate: true }, (windows) => {
+        resolve(windows);
       });
     });
   }
