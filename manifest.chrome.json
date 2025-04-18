@@ -29,7 +29,7 @@
     },
     "web_accessible_resources": [
       {
-        "resources": ["sandbox.js", "utils/*.js"],
+        "resources": ["sandbox.js", "utils/*.js", "settings.html", "settings.css", "settings.js", "settings-onboarding.js", "settings-onboarding.css"],
         "matches": ["<all_urls>"]
       }
     ]
