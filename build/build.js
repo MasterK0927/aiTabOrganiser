@@ -86,6 +86,8 @@ const copyAndProcessJs = (dir, targetDir) => {
   'popup.js', 
   'sandbox.js', 
   'ml-model.js',
+  'settings.js',
+  'settings-onboarding.js'
 ].forEach(file => {
   if (fs.existsSync(path.join(rootDir, file))) {
     processJsFile(

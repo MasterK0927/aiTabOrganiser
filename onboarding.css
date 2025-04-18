@@ -10,7 +10,8 @@
   animation: fadeIn 0.3s ease;
 }
 
-.onboarding-tooltip {
+.onboarding-tooltip,
+.settings-walkthrough-tooltip {
   position: absolute;
   background: var(--primary-gradient);
   color: white;
@@ -19,41 +20,112 @@
   box-shadow: var(--shadow-lg);
   width: 280px;
   max-width: 90%;
-  z-index: 9999;
+  z-index: 10000;
   animation: tooltipIn 0.4s var(--ease-bounce);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: visible;
 }
 
-.onboarding-tooltip::before {
+.onboarding-tooltip,
+.settings-walkthrough-tooltip {
+  z-index: 10000;
+  max-width: 280px;
+  transition: opacity 0.3s ease;
+  pointer-events: auto;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2), 0 10px 20px -10px rgba(0, 0, 0, 0.4);
+}
+
+.onboarding-tooltip::before,
+.settings-walkthrough-tooltip::before {
   content: '';
   position: absolute;
   width: 12px;
   height: 12px;
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
   transform: rotate(45deg);
+  z-index: 0; 
 }
 
-.onboarding-tooltip.position-bottom::before {
+.onboarding-tooltip.position-bottom::before,
+.settings-walkthrough-tooltip.position-bottom::before {
   top: -6px;
   left: 50%;
   margin-left: -6px;
 }
 
-.onboarding-tooltip.position-top::before {
+.onboarding-tooltip.position-top::before,
+.settings-walkthrough-tooltip.position-top::before {
   bottom: -6px;
   left: 50%;
   margin-left: -6px;
+  top: auto;
 }
 
-.onboarding-tooltip.position-left::before {
+.onboarding-tooltip.position-left::before,
+.settings-walkthrough-tooltip.position-left::before {
   right: -6px;
   top: 50%;
   margin-top: -6px;
 }
 
-.onboarding-tooltip.position-right::before {
+.onboarding-tooltip.position-right::before,
+.settings-walkthrough-tooltip.position-right::before {
   left: -6px;
   top: 50%;
   margin-top: -6px;
+}
+
+.onboarding-tooltip.position-center::before,
+.settings-walkthrough-tooltip.position-center::before {
+  display: none;
+}
+
+.onboarding-tooltip::after,
+.settings-walkthrough-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  border-radius: inherit;
+  z-index: -1;
+}
+
+.onboarding-tooltip::after,
+.settings-walkthrough-tooltip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--primary-gradient);
+  border-radius: inherit;
+  z-index: 0;
+}
+
+.onboarding-tooltip.position-left::before,
+.settings-walkthrough-tooltip.position-left::before {
+  right: -6px;
+  left: auto;
+  top: 50%;
+  margin-top: -6px;
+}
+
+.onboarding-tooltip.position-right::before,
+.settings-walkthrough-tooltip.position-right::before {
+  left: -6px;
+  right: auto;
+  top: 50%;
+  margin-top: -6px;
+}
+
+.settings-walkthrough-tooltip.position-top::before {
+  bottom: -6px;
+  left: 50%;
+  margin-left: -6px;
+  top: auto;
 }
 
 .onboarding-tooltip.position-center {
@@ -62,6 +134,49 @@
   transform: translate(-50%, -50%);
   width: 340px;
   text-align: center;
+}
+
+.onboarding-tooltip-title,
+.onboarding-tooltip-content,
+.walkthrough-tooltip-title,
+.walkthrough-tooltip-content,
+.onboarding-controls,
+.walkthrough-controls,
+.onboarding-progress,
+.walkthrough-progress {
+  position: relative;
+  z-index: 1;
+}
+
+.onboarding-tooltip-title,
+.walkthrough-tooltip-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.onboarding-tooltip-content,
+.walkthrough-tooltip-content {
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.onboarding-controls,
+.walkthrough-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.onboarding-progress,
+.walkthrough-progress {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin: 8px 0;
 }
 
 .onboarding-tooltip-title {
@@ -114,6 +229,14 @@
   border-radius: inherit;
 }
 
+.walkthrough-element-highlight,
+.onboarding-element-highlight {
+  position: relative;
+  z-index: 9999;
+  animation: pulse 1.5s infinite;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.3);
+}
+
 .onboarding-progress {
   display: flex;
   justify-content: center;
@@ -153,6 +276,14 @@
   background-color: rgba(0, 0, 0, 0.7);
 }
 
+.settings-section:last-of-type {
+  margin-bottom: 300px; 
+}
+
+body {
+  overflow-x: hidden;
+}
+
 @media (max-width: 480px) {
   .onboarding-tooltip {
     width: 260px;
@@ -166,4 +297,72 @@
   .onboarding-tooltip-content {
     font-size: 0.9rem;
   }
+}
+
+@media (max-width: 768px) {
+  .onboarding-tooltip, .settings-walkthrough-tooltip {
+    max-width: 220px;
+  }
+}
+
+.settings-walkthrough-tooltip::before {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  transform: rotate(45deg);
+  z-index: 0;
+}
+
+.walkthrough-tooltip-title,
+.walkthrough-tooltip-content,
+.walkthrough-progress,
+.walkthrough-controls {
+  position: relative;
+  z-index: 1;
+}
+
+.settings-walkthrough-tooltip.position-top::before {
+  bottom: -6px;
+  top: auto;
+  left: 50%;
+  margin-left: -6px;
+}
+
+.settings-walkthrough-tooltip.position-bottom::before {
+  top: -6px;
+  bottom: auto;
+  left: 50%;
+  margin-left: -6px;
+}
+
+.settings-walkthrough-tooltip.position-left::before {
+  right: -6px;
+  left: auto;
+  top: 50%;
+  margin-top: -6px;
+}
+
+.settings-walkthrough-tooltip.position-right::before {
+  left: -6px;
+  right: auto;
+  top: 50%;
+  margin-top: -6px;
+}
+
+.settings-walkthrough-tooltip.position-center::before {
+  display: none;
+}
+
+.settings-walkthrough-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  border-radius: inherit;
+  z-index: 0;
 }

@@ -1,5 +1,14 @@
-import { queryTabs } from "./tabUtils.js";
-import { getCurrentWindow, createTabGroup, updateTabGroup, ungroupTabs, isFirefox } from "./browserAPI.js";
+import { queryTabs } from './tabUtils.js';
+import { getCurrentWindow, createTabGroup, updateTabGroup, ungroupTabs, isFirefox, getStorage } from './browserAPI.js';
+
+async function loadSettings() {
+  return new Promise((resolve) => {
+    const storage = getStorage();
+    storage.get(['ai_tab_manager_settings'], (result) => {
+      resolve(result.ai_tab_manager_settings || {});
+    });
+  });
+}
 
 /**
  * Groups all open tabs for the given workspace in the current window.
@@ -9,21 +18,26 @@ import { getCurrentWindow, createTabGroup, updateTabGroup, ungroupTabs, isFirefo
  */
 export async function groupExistingWorkspaceTabsInCurrentWindow(workspace) {
   try {
-    const currentWindow = await getCurrentWindow();
-    const openTabs = await queryTabs({ windowId: currentWindow.id });
+    const settings = await loadSettings();
+    const autoGroupTabs = settings.hasOwnProperty('autoGroupTabs') ? settings.autoGroupTabs : true;
     
-    let matchingTabIds = [];
-    for (const savedTab of workspace.tabs) {
-      const matches = openTabs.filter(openTab =>
-        openTab.url && savedTab.url && openTab.url === savedTab.url
-      );
-      matchingTabIds.push(...matches.map(tab => tab.id));
+    if (!autoGroupTabs) {
+      return { success: true, info: "Auto-grouping disabled in settings" };
     }
     
-    matchingTabIds = [...new Set(matchingTabIds)];
+    if (!workspace || !workspace.tabs || workspace.tabs.length === 0) {
+      return { error: "No tabs in workspace" };
+    }
+    
+    const workspaceUrls = workspace.tabs.map(tab => tab.url);
+    const currentTabs = await queryTabs({ currentWindow: true });
+    
+    const matchingTabIds = currentTabs
+      .filter(tab => workspaceUrls.some(url => url === tab.url))
+      .map(tab => tab.id);
     
     if (matchingTabIds.length === 0) {
-      return { error: "None of the workspace tabs are open in this window." };
+      return { error: "No matching tabs found in current window" };
     }
     
     if (isFirefox) {
