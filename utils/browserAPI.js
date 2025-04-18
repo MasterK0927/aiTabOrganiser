@@ -15,7 +15,21 @@ export const browserAPI = isFirefox ? browser : chrome;
  * @returns {Object} Storage API
  */
 export function getStorage() {
-  return browserAPI.storage.local;
+  try {
+    // For Firefox
+    if (typeof browser !== 'undefined' && browser && browser.storage) {
+      return browser.storage.local;
+    }
+    // For Chrome
+    else if (typeof chrome !== 'undefined' && chrome && chrome.storage) {
+      return chrome.storage.local;
+    }
+    console.error("No browser storage API available");
+    return null;
+  } catch (error) {
+    console.error("Error accessing browser storage API:", error);
+    return null;
+  }
 }
 
 /**
@@ -135,15 +149,29 @@ export function ungroupTabs(tabIds) {
  * @returns {Promise<any>} - Promise resolving to response
  */
 export function sendMessage(message) {
-  if (isFirefox) {
-    return browser.runtime.sendMessage(message);
-  } else {
-    return new Promise((resolve) => {
-      chrome.runtime.sendMessage(message, (response) => {
-        resolve(response);
-      });
-    });
-  }
+  return new Promise((resolve, reject) => {
+    try {
+      if (typeof browser !== 'undefined' && browser.runtime) {
+        // Firefox
+        browser.runtime.sendMessage(message)
+          .then(resolve)
+          .catch(reject);
+      } else if (typeof chrome !== 'undefined' && chrome.runtime) {
+        // Chrome
+        chrome.runtime.sendMessage(message, (response) => {
+          if (chrome.runtime.lastError) {
+            reject(chrome.runtime.lastError);
+          } else {
+            resolve(response);
+          }
+        });
+      } else {
+        reject(new Error("No browser runtime API available"));
+      }
+    } catch (error) {
+      reject(error);
+    }
+  });
 }
 
 /**
