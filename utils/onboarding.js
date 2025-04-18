@@ -36,7 +36,7 @@ export const ONBOARDING_STEPS = [
     element: '#tabs-container',
     title: 'Your Workspace Tabs',
     content: 'View and access all tabs within a workspace from here.',
-    position: 'left'
+    position: 'bottom'
   },
   {
     id: 'dark-mode-toggle',
