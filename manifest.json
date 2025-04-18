@@ -26,5 +26,11 @@
   },
   "sandbox": {
     "pages": ["sandbox.html"]
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["sandbox.js", "utils/*.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
