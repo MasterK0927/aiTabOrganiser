@@ -9,9 +9,26 @@ const DEFAULT_MIN_WORKSPACE_SIZE = 2;
 async function loadSettings() {
   return new Promise((resolve) => {
     const storage = getStorage();
-    storage.get(['ai_tab_manager_settings'], (result) => {
-      console.log("ML model loaded settings:", result.ai_tab_manager_settings);
-      resolve(result.ai_tab_manager_settings || {});
+    storage.get([
+      "similarity_threshold",
+      "domain_weight",
+      "path_weight",
+      "title_weight",
+      "min_workspace_size",
+      "auto_group_tabs",
+      "naming_strategy",
+      "tab_source"
+    ], (result) => {
+      resolve({
+        similarityThreshold: result.similarity_threshold || DEFAULT_SIMILARITY_THRESHOLD,
+        domainWeight: result.domain_weight || DEFAULT_DOMAIN_WEIGHT,
+        pathWeight: result.path_weight || DEFAULT_PATH_WEIGHT,
+        titleWeight: result.title_weight || DEFAULT_TITLE_WEIGHT,
+        minWorkspaceSize: result.min_workspace_size || DEFAULT_MIN_WORKSPACE_SIZE,
+        autoGroupTabs: result.auto_group_tabs !== undefined ? result.auto_group_tabs : true,
+        namingStrategy: result.naming_strategy || 'domain-word',
+        tabSource: result.tab_source || 'current-window'
+      });
     });
   });
 }
