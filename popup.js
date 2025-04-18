@@ -1,6 +1,6 @@
 import { sendMessage, isFirefox, createTab } from './utils/browserAPI.js';
+import { hasCompletedOnboarding, markOnboardingCompleted, ONBOARDING_STEPS } from './utils/onboarding.js';
 
-// Firefox specific debugging
 if (isFirefox) {
   window.addEventListener('load', () => {
     console.log("DOM fully loaded in Firefox");
@@ -21,18 +21,8 @@ if (isFirefox) {
   });
 }
 
-if (localStorage.getItem("darkMode") === "enabled") {
-  document.documentElement.classList.add("dark-mode");
-}
-
-const darkModeToggle = document.getElementById("dark-mode-toggle");
-if (darkModeToggle) {
-  darkModeToggle.addEventListener("click", () => {
-    document.documentElement.classList.toggle("dark-mode");
-    const isDark = document.documentElement.classList.contains("dark-mode");
-    localStorage.setItem("darkMode", isDark ? "enabled" : "disabled");
-  });
-}
+let onboardingActive = false;
+let currentOnboardingStep = 0;
 
 const workspaceList = document.getElementById("workspace-list");
 const searchWorkspaces = document.getElementById("search-workspaces");
@@ -271,6 +261,164 @@ async function loadAndRenderWorkspaces(filter = "") {
   }
 }
 
+function startOnboarding() {
+  onboardingActive = true;
+  currentOnboardingStep = 0;
+  showOnboardingStep(currentOnboardingStep);
+}
+
+function showOnboardingStep(stepIndex) {
+  clearOnboardingElements();
+  
+  if (stepIndex >= ONBOARDING_STEPS.length) {
+    finishOnboarding();
+    return;
+  }
+  
+  const step = ONBOARDING_STEPS[stepIndex];
+  
+  const overlay = document.createElement('div');
+  overlay.className = 'onboarding-overlay';
+  document.body.appendChild(overlay);
+  
+  const tooltip = document.createElement('div');
+  tooltip.className = `onboarding-tooltip position-${step.position}`;
+  
+  const title = document.createElement('div');
+  title.className = 'onboarding-tooltip-title';
+  title.textContent = step.title;
+  tooltip.appendChild(title);
+  
+  const content = document.createElement('div');
+  content.className = 'onboarding-tooltip-content';
+  content.textContent = step.content;
+  tooltip.appendChild(content);
+  
+  const progress = document.createElement('div');
+  progress.className = 'onboarding-progress';
+  
+  ONBOARDING_STEPS.forEach((_, index) => {
+    const dot = document.createElement('div');
+    dot.className = `onboarding-dot ${index === stepIndex ? 'active' : ''}`;
+    progress.appendChild(dot);
+  });
+  
+  tooltip.appendChild(progress);
+  
+  const controls = document.createElement('div');
+  controls.className = 'onboarding-controls';
+  
+  if (stepIndex > 0) {
+    const backButton = document.createElement('button');
+    backButton.className = 'onboarding-button';
+    backButton.textContent = 'Back';
+    backButton.addEventListener('click', () => {
+      showOnboardingStep(stepIndex - 1);
+    });
+    controls.appendChild(backButton);
+  } else {
+    const skipButton = document.createElement('button');
+    skipButton.className = 'onboarding-button';
+    skipButton.textContent = 'Skip Tour';
+    skipButton.addEventListener('click', finishOnboarding);
+    controls.appendChild(skipButton);
+  }
+  
+  const nextButton = document.createElement('button');
+  nextButton.className = 'onboarding-button primary';
+  nextButton.textContent = stepIndex === ONBOARDING_STEPS.length - 1 ? 'Finish' : 'Next';
+  nextButton.addEventListener('click', () => {
+    showOnboardingStep(stepIndex + 1);
+  });
+  controls.appendChild(nextButton);
+  
+  tooltip.appendChild(controls);
+  document.body.appendChild(tooltip);
+  
+  if (step.element) {
+    const element = document.querySelector(step.element);
+    if (element) {
+      element.classList.add('onboarding-element-highlight');
+      
+      const elementRect = element.getBoundingClientRect();
+      const tooltipRect = tooltip.getBoundingClientRect();
+      
+      switch (step.position) {
+        case 'top':
+          tooltip.style.left = `${elementRect.left + elementRect.width / 2 - tooltipRect.width / 2}px`;
+          tooltip.style.top = `${elementRect.top - tooltipRect.height - 10}px`;
+          break;
+        case 'bottom':
+          tooltip.style.left = `${elementRect.left + elementRect.width / 2 - tooltipRect.width / 2}px`;
+          tooltip.style.top = `${elementRect.bottom + 10}px`;
+          break;
+        case 'left':
+          tooltip.style.left = `${elementRect.left - tooltipRect.width - 10}px`;
+          tooltip.style.top = `${elementRect.top + elementRect.height / 2 - tooltipRect.height / 2}px`;
+          break;
+        case 'right':
+          tooltip.style.left = `${elementRect.right + 10}px`;
+          tooltip.style.top = `${elementRect.top + elementRect.height / 2 - tooltipRect.height / 2}px`;
+          break;
+      }
+      
+      const tooltipTop = parseInt(tooltip.style.top);
+      const tooltipLeft = parseInt(tooltip.style.left);
+      
+      if (tooltipTop < 10) tooltip.style.top = '10px';
+      if (tooltipLeft < 10) tooltip.style.left = '10px';
+      if (tooltipTop + tooltipRect.height > window.innerHeight - 10) {
+        tooltip.style.top = `${window.innerHeight - tooltipRect.height - 10}px`;
+      }
+      if (tooltipLeft + tooltipRect.width > window.innerWidth - 10) {
+        tooltip.style.left = `${window.innerWidth - tooltipRect.width - 10}px`;
+      }
+    }
+  }
+  
+  currentOnboardingStep = stepIndex;
+}
+
+function clearOnboardingElements() {
+  document.querySelectorAll('.onboarding-overlay, .onboarding-tooltip').forEach(el => el.remove());
+  
+  document.querySelectorAll('.onboarding-element-highlight').forEach(el => {
+    el.classList.remove('onboarding-element-highlight');
+  });
+}
+
+async function finishOnboarding() {
+  clearOnboardingElements();
+  onboardingActive = false;
+  await markOnboardingCompleted();
+  
+  showStatus('Welcome to AI Tab Manager!');
+}
+
+async function initializeApp() {
+  if (localStorage.getItem("darkMode") === "enabled") {
+    document.documentElement.classList.add("dark-mode");
+  }
+  
+  const darkModeToggle = document.getElementById("dark-mode-toggle");
+  if (darkModeToggle) {
+    darkModeToggle.addEventListener("click", () => {
+      document.documentElement.classList.toggle("dark-mode");
+      const isDark = document.documentElement.classList.contains("dark-mode");
+      localStorage.setItem("darkMode", isDark ? "enabled" : "disabled");
+    });
+  }
+  
+  await loadAndRenderWorkspaces();
+  
+  const completed = await hasCompletedOnboarding();
+  if (!completed) {
+    startOnboarding();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initializeApp);
+
 document.getElementById("analyze-tabs").addEventListener("click", async () => {
   try {
     const response = await sendMessage({ action: "analyze_tabs" });
@@ -293,5 +441,3 @@ document.getElementById("analyze-tabs").addEventListener("click", async () => {
 searchWorkspaces.addEventListener("input", debounce((e) => {
   loadAndRenderWorkspaces(e.target.value);
 }, 300));
-
-loadAndRenderWorkspaces();
