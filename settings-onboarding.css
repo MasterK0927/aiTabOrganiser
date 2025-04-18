@@ -1,0 +1,247 @@
+.tooltip-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background: var(--primary-gradient);
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  border-radius: 50%;
+  margin-left: 8px;
+  cursor: help;
+  transition: transform var(--transition-normal), 
+              box-shadow var(--transition-normal);
+  position: relative;
+  box-shadow: var(--shadow-sm);
+}
+
+.tooltip-trigger:hover {
+  transform: scale(1.2);
+  box-shadow: var(--shadow-md);
+}
+
+.setting-tooltip {
+    position: absolute;
+    background: var(--primary-gradient);
+    color: white;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    width: 280px;
+    max-width: 90%;
+    z-index: 10000;
+    animation: tooltipIn 0.4s var(--ease-bounce);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: visible;
+}
+
+.setting-tooltip.dark {
+  background: linear-gradient(135deg, #374151, #1f2937);
+}
+
+.setting-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background: #6366f1;
+}
+
+.settings-walkthrough-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.3s ease;
+}
+
+.settings-walkthrough-tooltip {
+    position: absolute;
+    background: var(--primary-gradient);
+    color: white;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    width: 280px;
+    max-width: 90%;
+    z-index: 10000;
+    animation: tooltipIn 0.4s var(--ease-bounce);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: visible;
+}
+
+.settings-walkthrough-tooltip::before {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  transform: rotate(45deg);
+}
+
+.settings-walkthrough-tooltip.position-bottom::before {
+  top: -6px;
+  left: 50%;
+  margin-left: -6px;
+}
+
+.settings-walkthrough-tooltip.position-top::before {
+    bottom: -6px;
+    left: 50%;
+    margin-left: -6px;
+    top: auto;
+}
+
+.settings-walkthrough-tooltip.position-left::before {
+  right: -6px;
+  top: 50%;
+  margin-top: -6px;
+}
+
+.settings-walkthrough-tooltip.position-right::before {
+  left: -6px;
+  top: 50%;
+  margin-top: -6px;
+}
+
+.settings-walkthrough-tooltip.position-center::before {
+    display: none;
+}
+
+.settings-walkthrough-tooltip.position-center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 340px;
+  text-align: center;
+}
+
+.walkthrough-tooltip-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.walkthrough-tooltip-content {
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.walkthrough-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.walkthrough-button {
+  background-color: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: var(--border-radius-xs);
+  padding: 8px 16px;
+  color: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color var(--transition-normal);
+}
+
+.walkthrough-button:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.walkthrough-button.primary {
+  background-color: rgba(255, 255, 255, 0.25);
+  font-weight: 500;
+}
+
+.walkthrough-button.primary:hover {
+  background-color: rgba(255, 255, 255, 0.35);
+}
+
+.walkthrough-element-highlight {
+  position: relative;
+  z-index: 9999;
+  animation: pulse 1.5s infinite;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.3);
+  border-radius: inherit;
+}
+
+.walkthrough-progress {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.walkthrough-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.walkthrough-dot.active {
+  background-color: white;
+}
+
+/* Dark mode adjustments */
+:root.dark-mode .settings-walkthrough-overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+:root.dark-mode .tooltip-trigger {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+}
+
+:root.dark-mode .setting-tooltip::before {
+  background: #4f46e5;
+}
+
+@keyframes tooltipFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes tooltipIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5); }
+  70% { box-shadow: 0 0 0 8px rgba(99, 102, 241, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+}
+
+@media (max-width: 480px) {
+  .settings-walkthrough-tooltip {
+    width: 260px;
+    padding: 16px;
+  }
+  
+  .walkthrough-tooltip-title {
+    font-size: 1rem;
+  }
+  
+  .walkthrough-tooltip-content {
+    font-size: 0.9rem;
+  }
+}
