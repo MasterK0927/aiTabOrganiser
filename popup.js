@@ -349,7 +349,11 @@ function showOnboardingStep(stepIndex) {
           tooltip.style.top = `${elementRect.top - tooltipRect.height - 10}px`;
           break;
         case 'bottom':
-          tooltip.style.left = `${elementRect.left + elementRect.width / 2 - tooltipRect.width / 2}px`;
+          if (step.id === 'analyze-tabs') {
+            tooltip.style.left = `${elementRect.left - 60}px`;
+          } else {
+            tooltip.style.left = `${elementRect.left + elementRect.width / 2 - tooltipRect.width / 2}px`;
+          }
           tooltip.style.top = `${elementRect.bottom + 10}px`;
           break;
         case 'left':
