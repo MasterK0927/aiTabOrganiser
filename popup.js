@@ -33,11 +33,13 @@ let activeWorkspaceIndex = 0;
 let currentWorkspaces = [];
 
 function showStatus(message, isError = false) {
-  statusMessage.textContent = message;
-  statusMessage.className = isError ? "error" : "success";
+  const statusElement = document.getElementById("status-message");
+  statusElement.textContent = message;
+  statusElement.className = isError ? "status-message error visible" : "status-message success visible";
+  
+  // Hide message after a delay
   setTimeout(() => {
-    statusMessage.textContent = "";
-    statusMessage.className = "";
+    statusElement.className = statusElement.className.replace(" visible", "");
   }, 3000);
 }
 
@@ -350,7 +352,9 @@ function showOnboardingStep(stepIndex) {
           break;
         case 'bottom':
           if (step.id === 'analyze-tabs') {
-            tooltip.style.left = `${elementRect.left - 60}px`;
+            tooltip.style.left = `${elementRect.left - 120}px`;
+          } else if (step.id === 'dark-mode-toggle') {
+            tooltip.style.left = `${elementRect.left + elementRect.width / 2 - tooltipRect.width / 2 - 20}px`;
           } else {
             tooltip.style.left = `${elementRect.left + elementRect.width / 2 - tooltipRect.width / 2}px`;
           }
@@ -419,11 +423,46 @@ async function initializeApp() {
   if (!completed) {
     startOnboarding();
   }
+  
+  document.getElementById("settings-button").addEventListener("click", () => {
+    window.location.href = "settings.html";
+  });
 }
 
 document.addEventListener('DOMContentLoaded', initializeApp);
 
-document.getElementById("analyze-tabs").addEventListener("click", async () => {
+
+document.getElementById("analyze-tabs").addEventListener("click", async (e) => {
+  const button = e.currentTarget;
+  const buttonRect = button.getBoundingClientRect();
+  
+  const x = e.clientX - buttonRect.left;
+  const y = e.clientY - buttonRect.top;
+  
+  const effectEl = button.querySelector(".button-effect");
+  effectEl.style.left = `${x}px`;
+  effectEl.style.top = `${y}px`;
+  
+  button.classList.add("animate");
+  
+  const splash = document.getElementById("gradient-splash");
+  
+  const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+  const buttonCenterY = buttonRect.top + buttonRect.height / 2;
+  
+  const xPercent = (buttonCenterX / window.innerWidth) * 100;
+  const yPercent = (buttonCenterY / window.innerHeight) * 100;
+  
+  splash.style.setProperty('--x', `${xPercent}%`);
+  splash.style.setProperty('--y', `${yPercent}%`);
+  
+  splash.classList.add("active");
+  
+  setTimeout(() => {
+    button.classList.remove("animate");
+    splash.classList.remove("active");
+  }, 1500);
+  
   try {
     const response = await sendMessage({ action: "analyze_tabs" });
     if (response.error) throw new Error(response.error);
