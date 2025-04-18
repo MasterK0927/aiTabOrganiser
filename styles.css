@@ -139,11 +139,12 @@ body {
 
 .header-content {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
 }
 
 .header-content h1 {
+  margin-right: auto;
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -655,39 +656,35 @@ body {
 
 .status-message {
   position: fixed;
-  bottom: 1.5rem;
+  bottom: 20px;
   left: 50%;
-  transform: translateX(-50%) translateY(100px);
-  padding: 0.75rem 1.25rem;
-  border-radius: var(--border-radius-sm);
-  font-size: 0.95rem;
+  transform: translateX(-50%) translateY(20px);
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 500;
   opacity: 0;
-  transition: opacity var(--transition-normal),
-              transform var(--transition-normal) var(--ease-bounce);
-  z-index: 100;
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  z-index: 1000;
   box-shadow: var(--shadow-md);
-  animation: slideUp 0.4s var(--ease-bounce) forwards, fadeOut 0.3s 2.5s forwards;
+  max-width: 90%;
+  text-align: center;
   pointer-events: none;
+  backdrop-filter: blur(8px);
+}
+
+.status-message.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 .status-message.success {
-  background: var(--success-gradient);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(5, 150, 105, 0.9));
   color: white;
 }
 
 .status-message.error {
-  background: var(--error-gradient);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.9));
   color: white;
-}
-
-@keyframes slideUp {
-  0% { transform: translateX(-50%) translateY(100px); opacity: 0; }
-  100% { transform: translateX(-50%) translateY(0); opacity: 1; }
-}
-
-@keyframes fadeOut {
-  0% { opacity: 1; }
-  100% { opacity: 0; }
 }
 
 .loading-spinner {
@@ -909,3 +906,137 @@ input:focus:not(:focus-visible) {
 .workspace-card:nth-child(3) { animation-delay: 0.2s; }
 .workspace-card:nth-child(4) { animation-delay: 0.25s; }
 .workspace-card:nth-child(5) { animation-delay: 0.3s; }
+
+.header-utils {
+  display: flex;
+  gap: 0.5rem;
+  margin-right: 1rem;
+}
+
+.icon-button {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  cursor: pointer;
+  color: white;
+  transition: background-color var(--transition-normal),
+              transform var(--transition-normal),
+              box-shadow var(--transition-normal);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  padding: 0;
+}
+
+.icon-button:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.icon-button:active {
+  transform: translateY(0);
+}
+
+:root.dark-mode .dark-mode-icon {
+  transform: rotate(180deg);
+}
+
+.dark-mode-icon {
+  transition: transform 0.5s var(--ease-bounce);
+}
+
+.modern-button {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--primary-color), #4f46e5);
+  border: none;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  padding: 0;
+  border-radius: 12px;
+  transition: transform 0.3s var(--ease-bounce), 
+              box-shadow 0.3s ease,
+              background 0.3s ease;
+}
+
+.modern-button:hover {
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+  transform: translateY(-3px);
+  background: linear-gradient(135deg, #4f46e5, var(--primary-color));
+}
+
+.modern-button:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 8px rgba(79, 70, 229, 0.4);
+}
+
+.button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  position: relative;
+  z-index: 2;
+}
+
+.button-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.button-effect {
+  position: absolute;
+  display: block;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+}
+
+.modern-button.animate .button-effect {
+  width: 400px;
+  height: 400px;
+}
+
+.gradient-splash {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), 
+                              rgba(99, 102, 241, 0.8) 0%, 
+                              rgba(99, 102, 241, 0) 60%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease-out;
+}
+
+.gradient-splash.active {
+  opacity: 1;
+  z-index: 0;
+  animation: pulse 1.5s ease-out forwards;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  
+  50% {
+    opacity: 0.6;
+  }
+  
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
