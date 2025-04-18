@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -17,20 +18,41 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm install
 
-      - name: Build Extensions
+      - name: Generate release key if missing
         run: |
-          chmod +x build.sh
-          ./build.sh all
+          if [ -n "${{ secrets.CRX_KEY }}" ]; then
+            echo "${{ secrets.CRX_KEY }}" > release-key.pem
+          else
+            echo "No CRX key found in secrets, generating temporary key for build"
+            openssl genrsa -out release-key.pem 2048
+          fi
+          chmod 600 release-key.pem
 
-      - name: Write CRX key file
-        run: echo "${{ secrets.CRX_KEY }}" > release-key.pem
+      - name: Build Chrome extension
+        run: npm run build:chrome
 
-      - name: Build .crx file
-        run: npm run build:crx
+      - name: Build Firefox extension  
+        run: npm run build:firefox
+
+      - name: Create packages directory
+        run: mkdir -p dist/packages
+
+      - name: Package Chrome extension
+        run: npm run package:chrome
+
+      - name: Package Chrome extension as CRX
+        run: npm run package:chrome:crx
+
+      - name: Package Firefox extension as ZIP
+        run: npm run package:firefox
+      
+      - name: Package Firefox extension as XPI
+        run: npm run package:firefox:xpi
 
       - name: List directory contents
         run: ls -alh dist/packages/
@@ -41,54 +63,82 @@ jobs:
           name: ai-tab-manager-chrome
           path: dist/packages/ai-tab-manager-chrome.zip
 
+      - name: Upload Chrome CRX Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-tab-manager-chrome-crx
+          path: dist/packages/ai-tab-manager-chrome.crx
+
       - name: Upload Firefox Extension Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ai-tab-manager-firefox
           path: dist/packages/ai-tab-manager-firefox.zip
+          
+      - name: Upload Firefox XPI Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-tab-manager-firefox-xpi
+          path: dist/packages/ai-tab-manager-firefox.xpi
 
-      - name: Read Changelog
-        id: read_changelog
-        run: |
-          changelog=$(cat CHANGELOG.md)
+      - name: Extract tag version
+        id: get_version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         id: create_release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
+          body_path: CHANGELOG.md
 
-      - name: Upload Chrome Release Asset
+      - name: Upload Chrome ZIP to Release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./dist/packages/ai-tab-manager-chrome.zip
-          asset_name: ai-tab-manager-chrome.zip
+          asset_name: ai-tab-manager-chrome-${{ steps.get_version.outputs.VERSION }}.zip
           asset_content_type: application/zip
 
-      - name: Upload Firefox Release Asset
+      - name: Upload Chrome CRX to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/packages/ai-tab-manager-chrome.crx
+          asset_name: ai-tab-manager-chrome-${{ steps.get_version.outputs.VERSION }}.crx
+          asset_content_type: application/x-chrome-extension
+
+      - name: Upload Firefox ZIP to Release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./dist/packages/ai-tab-manager-firefox.zip
-          asset_name: ai-tab-manager-firefox.zip
+          asset_name: ai-tab-manager-firefox-${{ steps.get_version.outputs.VERSION }}.zip
           asset_content_type: application/zip
 
-      - name: Upload Chrome CRX Asset
+      - name: Upload Firefox XPI to Release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./aiTabOrganiser.crx
-          asset_name: aiTabOrganiser.crx
-          asset_content_type: application/octet-stream
+          asset_path: ./dist/packages/ai-tab-manager-firefox.xpi
+          asset_name: ai-tab-manager-firefox-${{ steps.get_version.outputs.VERSION }}.xpi
+          asset_content_type: application/x-xpinstall
