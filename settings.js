@@ -1,4 +1,4 @@
-import { sendMessage, getStorage } from './utils/browserAPI.js';
+import { sendMessage, getStorage, getAllWindows, getCurrentWindow } from './utils/browserAPI.js';
 import { 
   SETTINGS_ONBOARDING_STEPS, 
   hasCompletedSettingsOnboarding, 
@@ -28,6 +28,10 @@ const exportButton = document.getElementById("export-settings");
 const importButton = document.getElementById("import-settings");
 const resetButton = document.getElementById("reset-settings");
 const startWalkthroughButton = document.getElementById("start-walkthrough-floating");
+const tabSourceSelect = document.getElementById("tab-source");
+const specificWindowContainer = document.getElementById("specific-window-container");
+const specificWindowSelect = document.getElementById("specific-window");
+const refreshWindowsButton = document.getElementById("refresh-windows");
 
 function showStatus(message, isError = false) {
   console.log("Showing status:", message, isError);
@@ -90,6 +94,17 @@ async function loadSettings() {
           resolve(result.ai_tab_manager_settings);
         }
       });
+
+      storage.get(["tab_source"], function(data) {
+        if (data.tab_source) {
+          tabSourceSelect.value = data.tab_source;
+        } else {
+          // Default to current window
+          tabSourceSelect.value = "current-window";
+          storage.set({ "tab_source": "current-window" });
+        }
+      });
+
     } catch (error) {
       console.error("Error loading settings:", error);
       resolve(DEFAULT_SETTINGS);
@@ -221,7 +236,6 @@ function importSettings(file) {
 
 let walkthroughActive = false;
 let currentWalkthroughStep = 0;
-
 
 function startWalkthrough() {
   walkthroughActive = true;
@@ -392,6 +406,70 @@ function initializeSliders() {
   });
 }
 
+async function populateWindowList() {
+  try {
+    const windowCount = document.getElementById("window-count");
+    const windows = await getAllWindows();
+    specificWindowSelect.innerHTML = '';
+    
+    const currentWindow = await getCurrentWindow();
+    windows.sort((a, b) => {
+      if (a.id === currentWindow.id) return -1;
+      if (b.id === currentWindow.id) return 1;
+      
+      return b.tabs.length - a.tabs.length;
+    });
+    
+    windows.forEach((window) => {
+      const title = getWindowTitle(window);
+      const tabCount = window.tabs.length;
+      
+      const option = document.createElement('option');
+      option.value = window.id;
+      
+      const isCurrent = window.id === currentWindow.id;
+      option.textContent = isCurrent 
+        ? `📍 Current Window (${tabCount} tabs)` 
+        : `${title.substring(0, 25)}${title.length > 25 ? '...' : ''} (${tabCount} tabs)`;
+      
+      specificWindowSelect.appendChild(option);
+    });
+    
+    if (windowCount) {
+      windowCount.textContent = `${windows.length} window${windows.length !== 1 ? 's' : ''}`;
+    }
+    
+    const storage = getStorage();
+    storage.get(['specific_window_id'], function(data) {
+      if (data.specific_window_id) {
+        const option = specificWindowSelect.querySelector(`option[value="${data.specific_window_id}"]`);
+        if (option) {
+          specificWindowSelect.value = data.specific_window_id;
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Failed to load windows:", error);
+    specificWindowSelect.innerHTML = '<option value="">Error loading windows</option>';
+    const windowCount = document.getElementById("window-count");
+    if (windowCount) {
+      windowCount.textContent = 'Error';
+    }
+  }
+}
+
+function getWindowTitle(window) {
+  if (!window.tabs || window.tabs.length === 0) {
+    return `Window ${window.id}`;
+  }
+  
+  const activeTab = window.tabs.find(tab => tab.active);
+  const firstTab = window.tabs[0];
+  
+  const tab = activeTab || firstTab;
+  return tab.title || `Window ${window.id}`;
+}
+
 async function initializeSettings() {
   try {
     console.log("Initializing settings page");
@@ -486,6 +564,44 @@ async function initializeSettings() {
     
     initializeSliders();
     
+    tabSourceSelect.addEventListener("change", function() {
+      if (tabSourceSelect.value === "specific-window") {
+        specificWindowContainer.style.display = "block";
+        populateWindowList();
+      } else {
+        specificWindowContainer.style.display = "none";
+      }
+      
+      const storage = getStorage();
+      storage.set({ "tab_source": tabSourceSelect.value }, function() {
+        showStatus("Settings saved successfully");
+      });
+    });
+
+    refreshWindowsButton.addEventListener("click", function() {
+      populateWindowList();
+      showStatus("Window list refreshed");
+    });
+
+    specificWindowSelect.addEventListener("change", function() {
+      const storage = getStorage();
+      storage.set({ "specific_window_id": specificWindowSelect.value }, function() {
+        showStatus("Settings saved successfully");
+      });
+    });
+
+    const storage = getStorage();
+    storage.get(["tab_source", "specific_window_id"], function(data) {
+      if (data.tab_source) {
+        tabSourceSelect.value = data.tab_source;
+        
+        if (data.tab_source === "specific-window") {
+          specificWindowContainer.style.display = "block";
+          populateWindowList();
+        }
+      }
+    });
+
     console.log("Settings page initialized successfully");
   } catch (error) {
     console.error("Error initializing settings:", error);
