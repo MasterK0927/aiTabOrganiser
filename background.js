@@ -2,15 +2,41 @@ import { groupTabsBySimilarity } from "./ml-model.js";
 import { queryTabs, ensureArray } from "./utils/tabUtils.js";
 import { loadWorkspaces, saveWorkspaces, generateWorkspaceName } from "./utils/workspaceUtils.js";
 import { groupExistingWorkspaceTabsInCurrentWindow, ungroupWorkspaceTabs } from "./utils/groupUtils.js";
-import { getURL, createWindow, removeTabs, isFirefox } from "./utils/browserAPI.js";
+import { getURL, createWindow, removeTabs, isFirefox, getStorage, getCurrentWindow } from "./utils/browserAPI.js";
 import { captureTabScreenshot } from "./utils/preview.js";
 
-// Create message handler function for reuse
+async function loadSettings() {
+  return new Promise((resolve) => {
+    const storage = getStorage();
+    storage.get([
+      "tab_source",
+      "specific_window_id"
+    ], (result) => {
+      resolve({
+        tabSource: result.tab_source || 'current-window',
+        specificWindowId: result.specific_window_id || null
+      });
+    });
+  });
+}
+
 const handleMessage = async (message, sender) => {
   switch (message.action) {
     case "analyze_tabs":
       try {
-        const rawTabs = await queryTabs({});
+        const settings = await loadSettings();
+        const tabSource = settings.tabSource || 'current-window';
+        
+        let queryOptions = {};
+        if (tabSource === 'current-window') {
+          const currentWindow = await getCurrentWindow();
+          queryOptions = { windowId: currentWindow.id };
+        } else if (tabSource === 'specific-window' && settings.specificWindowId) {
+          queryOptions = { windowId: parseInt(settings.specificWindowId) };
+        }
+        
+        const rawTabs = await queryTabs(queryOptions);
+        
         const validTabs = ensureArray(rawTabs).filter(tab =>
           tab.url &&
           !tab.url.startsWith("chrome://") &&
@@ -38,11 +64,18 @@ const handleMessage = async (message, sender) => {
         
         await saveWorkspaces(workspaces);
 
-        for (const workspace of workspaces) {
-          await groupExistingWorkspaceTabsInCurrentWindow(workspace);
+        if (tabSource === 'current-window') {
+          for (const workspace of workspaces) {
+            await groupExistingWorkspaceTabsInCurrentWindow(workspace);
+          }
         }
         
-        return { success: true, workspaces };
+        let sourceDescription = tabSource;
+        if (tabSource === 'specific-window' && settings.specificWindowId) {
+          sourceDescription = `specific-window-${settings.specificWindowId}`;
+        }
+        
+        return { success: true, workspaces, source: sourceDescription };
       } catch (error) {
         console.error("Tab analysis error:", error);
         return {
@@ -124,6 +157,15 @@ const handleMessage = async (message, sender) => {
       } catch (error) {
         console.error("Failed to process settings update:", error);
         return { error: "Failed to process settings update" };
+      }
+
+    case "get_settings":
+      try {
+        const settings = await loadSettings();
+        return { success: true, settings };
+      } catch (error) {
+        console.error("Failed to load settings:", error);
+        return { error: "Failed to load settings" };
       }
 
     default:
