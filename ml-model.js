@@ -9,7 +9,9 @@ export function groupTabsBySimilarity(tabs) {
     tab.url &&
     tab.url.trim() !== "" &&
     !tab.url.startsWith("chrome://") &&
-    !tab.url.startsWith("chrome-extension://")
+    !tab.url.startsWith("chrome-extension://") &&
+    !tab.url.startsWith("moz-extension://") &&
+    !tab.url.startsWith("about:")
   );
   if (validTabs.length === 0) {
     return [];
