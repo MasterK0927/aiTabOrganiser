@@ -23,7 +23,13 @@ const handleMessage = async (message, sender) => {
           throw new Error("No valid tabs found");
         }
         
-        const groups = groupTabsBySimilarity(validTabs);
+        const groups = await groupTabsBySimilarity(validTabs);
+        console.log("Groups returned:", groups);
+        
+        if (!Array.isArray(groups)) {
+          throw new Error("Expected an array of groups, but received " + typeof groups);
+        }
+        
         const workspaces = groups.map(group => ({
           name: generateWorkspaceName(group.tabs),
           tabs: group.tabs,
@@ -109,6 +115,15 @@ const handleMessage = async (message, sender) => {
       } catch (error) {
         console.error("Failed to save workspaces:", error);
         return { error: "Failed to save workspaces" };
+      }
+
+    case "settings_updated":
+      try {
+        console.log("Settings updated:", message.settings);
+        return { success: true, message: "Settings updated successfully" };
+      } catch (error) {
+        console.error("Failed to process settings update:", error);
+        return { error: "Failed to process settings update" };
       }
 
     default:
