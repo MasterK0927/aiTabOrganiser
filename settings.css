@@ -710,3 +710,66 @@ body {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.3) rotate(10deg); }
 }
+
+.modern-window-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.modern-window-selector select {
+  width: 100%;
+  padding: 0.75rem;
+}
+
+.window-selector-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.window-counter {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  background-color: var(--bg-primary);
+  border-radius: 9999px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.refresh-windows-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-xs);
+  background: linear-gradient(to right, var(--bg-secondary), var(--bg-primary));
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: transform var(--transition-normal), 
+              background var(--transition-normal),
+              box-shadow var(--transition-normal);
+}
+
+.refresh-windows-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+  background: linear-gradient(to right, var(--bg-primary), var(--bg-secondary));
+}
+
+.refresh-icon {
+  font-size: 0.9rem;
+  transition: transform 0.5s var(--ease-bounce);
+}
+
+.refresh-windows-btn:hover .refresh-icon {
+  transform: rotate(180deg);
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
