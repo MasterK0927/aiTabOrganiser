@@ -1,4 +1,11 @@
+19/04/2025 (v1.4)
+
+- Adds settings page
+- Adds support for custom rules
+- Enhances animations
+
 18/04/2025 (v1.3)
+
 - Adds onboarding tutorial
 
 18/04/2025 (v1.2)
