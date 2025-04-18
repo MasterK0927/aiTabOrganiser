@@ -4,8 +4,16 @@ import { getCurrentWindow, createTabGroup, updateTabGroup, ungroupTabs, isFirefo
 async function loadSettings() {
   return new Promise((resolve) => {
     const storage = getStorage();
-    storage.get(['ai_tab_manager_settings'], (result) => {
-      resolve(result.ai_tab_manager_settings || {});
+    storage.get([
+      "auto_group_tabs",
+      "tab_source",
+      "specific_window_id"
+    ], (result) => {
+      resolve({
+        autoGroupTabs: result.auto_group_tabs !== undefined ? result.auto_group_tabs : true,
+        tabSource: result.tab_source || 'current-window',
+        specificWindowId: result.specific_window_id || null
+      });
     });
   });
 }
@@ -30,7 +38,10 @@ export async function groupExistingWorkspaceTabsInCurrentWindow(workspace) {
     }
     
     const workspaceUrls = workspace.tabs.map(tab => tab.url);
-    const currentTabs = await queryTabs({ currentWindow: true });
+    
+    // Get current window
+    const currentWindow = await getCurrentWindow();
+    const currentTabs = await queryTabs({ windowId: currentWindow.id });
     
     const matchingTabIds = currentTabs
       .filter(tab => workspaceUrls.some(url => url === tab.url))
@@ -69,6 +80,8 @@ export async function groupExistingWorkspaceTabsInCurrentWindow(workspace) {
  */
 export async function ungroupWorkspaceTabs(workspace) {
   try {
+    const settings = await loadSettings();
+    const tabSource = settings.tabSource || 'current-window';
     const currentWindow = await getCurrentWindow();
     const openTabs = await queryTabs({ windowId: currentWindow.id });
     
