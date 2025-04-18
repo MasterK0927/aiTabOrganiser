@@ -30,6 +30,17 @@ When you click the "Analyze Tabs" button, the extension:
 - **Switch Between Workspaces**: Open all tabs in a workspace with one click
 - **Delete Workspaces**: Remove workspaces you no longer need
 
+### Screenshots
+
+![Onboarding](<screenshots/Screenshot from 2025-04-19 05-12-32.png>)
+![Light Mode](<screenshots/Screenshot from 2025-04-19 05-12-49.png>)
+![Dark Mode](<screenshots/Screenshot from 2025-04-19 05-13-01.png>)
+![Settings Page Onboarding](<screenshots/Screenshot from 2025-04-19 05-13-13.png>)
+![Settings](<screenshots/Screenshot from 2025-04-19 05-13-24.png>)
+![Grouped-1](<screenshots/Screenshot from 2025-04-19 05-14-06.png>)
+![Grouped-2](<screenshots/Screenshot from 2025-04-19 05-14-38.png>)
+![Sandbox](<screenshots/Screenshot from 2025-04-19 05-15-39.png>)
+
 ## Installation
 
 ### From Releases
