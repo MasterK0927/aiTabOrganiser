@@ -1,4 +1,4 @@
-name: Build and Release Chrome Extension
+name: Build and Release Extensions
 
 on:
   push:
@@ -21,6 +21,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Build Extensions
+        run: |
+          chmod +x build.sh
+          ./build.sh all
+
       - name: Write CRX key file
         run: echo "${{ secrets.CRX_KEY }}" > release-key.pem
 
@@ -28,13 +33,19 @@ jobs:
         run: npm run build:crx
 
       - name: List directory contents
-        run: ls -alh
+        run: ls -alh dist/packages/
 
-      - name: Upload CRX Artifact
+      - name: Upload Chrome Extension Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: aiTabOrganiser-crx
-          path: aiTabOrganiser.crx
+          name: ai-tab-manager-chrome
+          path: dist/packages/ai-tab-manager-chrome.zip
+
+      - name: Upload Firefox Extension Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-tab-manager-firefox
+          path: dist/packages/ai-tab-manager-firefox.zip
 
       - name: Read Changelog
         id: read_changelog
@@ -52,7 +63,27 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Upload Release Asset
+      - name: Upload Chrome Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/packages/ai-tab-manager-chrome.zip
+          asset_name: ai-tab-manager-chrome.zip
+          asset_content_type: application/zip
+
+      - name: Upload Firefox Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/packages/ai-tab-manager-firefox.zip
+          asset_name: ai-tab-manager-firefox.zip
+          asset_content_type: application/zip
+
+      - name: Upload Chrome CRX Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
