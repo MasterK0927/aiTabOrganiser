@@ -1,9 +1,37 @@
+import { getStorage } from './utils/browserAPI.js';
+
+const DEFAULT_SIMILARITY_THRESHOLD = 0.5;
+const DEFAULT_DOMAIN_WEIGHT = 0.6;
+const DEFAULT_PATH_WEIGHT = 0.3;
+const DEFAULT_TITLE_WEIGHT = 0.1;
+const DEFAULT_MIN_WORKSPACE_SIZE = 2;
+
+async function loadSettings() {
+  return new Promise((resolve) => {
+    const storage = getStorage();
+    storage.get(['ai_tab_manager_settings'], (result) => {
+      console.log("ML model loaded settings:", result.ai_tab_manager_settings);
+      resolve(result.ai_tab_manager_settings || {});
+    });
+  });
+}
+
 /**
  * Groups tabs by similarity based on domain, URL path, and common title words.
  * @param {Array} tabs - An array of tabs.
- * @returns {Array} - An array of groups with properties { name, tabs }.
+ * @returns {Promise<Array>} - A promise resolving to an array of groups with properties { name, tabs }.
  */
-export function groupTabsBySimilarity(tabs) {
+export async function groupTabsBySimilarity(tabs) {
+  const settings = await loadSettings();
+  console.log("Using settings for grouping:", settings);
+  
+  const SIMILARITY_THRESHOLD = settings.similarityThreshold || DEFAULT_SIMILARITY_THRESHOLD;
+  const DOMAIN_WEIGHT = settings.domainWeight || DEFAULT_DOMAIN_WEIGHT;
+  const PATH_WEIGHT = settings.pathWeight || DEFAULT_PATH_WEIGHT;
+  const TITLE_WEIGHT = settings.titleWeight || DEFAULT_TITLE_WEIGHT;
+  const MIN_WORKSPACE_SIZE = settings.minWorkspaceSize || DEFAULT_MIN_WORKSPACE_SIZE;
+  const NAMING_STRATEGY = settings.namingStrategy || 'domain-word';
+  
   const validTabs = tabs.filter(tab =>
     tab &&
     tab.url &&
@@ -13,6 +41,7 @@ export function groupTabsBySimilarity(tabs) {
     !tab.url.startsWith("moz-extension://") &&
     !tab.url.startsWith("about:")
   );
+  
   if (validTabs.length === 0) {
     return [];
   }
@@ -25,18 +54,21 @@ export function groupTabsBySimilarity(tabs) {
       const pathSimilarity = url1.pathname.split("/").filter(Boolean).some(
         part => url2.pathname.includes(part)
       );
+      
       const titleWords1 = (tab1.title || "").toLowerCase().split(/\W+/);
       const titleWords2 = (tab2.title || "").toLowerCase().split(/\W+/);
       const commonWords = titleWords1.filter(word =>
         titleWords2.includes(word) && word.length > 3
       );
-      return (domainMatch ? 0.6 : 0) + (pathSimilarity ? 0.3 : 0) + (commonWords.length > 0 ? 0.1 : 0);
+      
+      return (domainMatch ? DOMAIN_WEIGHT : 0) + 
+             (pathSimilarity ? PATH_WEIGHT : 0) + 
+             (commonWords.length > 0 ? TITLE_WEIGHT : 0);
     } catch {
       return 0;
     }
   };
 
-  const SIMILARITY_THRESHOLD = 0.5;
   const groups = [];
   validTabs.forEach((tab) => {
     const similarGroupIndex = groups.findIndex(group =>
@@ -49,7 +81,7 @@ export function groupTabsBySimilarity(tabs) {
     }
   });
 
-  return groups.filter(group => group.length > 1).map(group => {
+  const result = groups.filter(group => group.length >= MIN_WORKSPACE_SIZE).map(group => {
     const domains = group.map(tab => {
       try {
         return new URL(tab.url).hostname.replace("www.", "");
@@ -82,11 +114,29 @@ export function groupTabsBySimilarity(tabs) {
       null
     );
 
-    return {
-      name: primaryDomain 
+    let name;
+    console.log("Using naming strategy:", NAMING_STRATEGY);
+    
+    if (NAMING_STRATEGY === 'domain-word') {
+      name = primaryDomain 
         ? (commonWord ? `${primaryDomain} - ${commonWord}` : primaryDomain)
-        : (commonWord || "Workspace"),
+        : (commonWord || "Workspace");
+    } else if (NAMING_STRATEGY === 'domain-only') {
+      name = primaryDomain || "Workspace";
+    } else if (NAMING_STRATEGY === 'auto-numbered') {
+      name = `Workspace ${groups.indexOf(group) + 1}`;
+    } else {
+      name = primaryDomain 
+        ? (commonWord ? `${primaryDomain} - ${commonWord}` : primaryDomain)
+        : (commonWord || "Workspace");
+    }
+
+    return {
+      name: name,
       tabs: group
     };
   });
+  
+  console.log("Returning groups from ml-model:", result);
+  return Array.isArray(result) ? result : [];
 }
