@@ -1,3 +1,6 @@
+18/04/2025 (v1.3)
+- Adds onboarding tutorial
+
 18/04/2025 (v1.2)
 
 - Major UI overhaul
