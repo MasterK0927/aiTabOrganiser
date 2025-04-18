@@ -85,6 +85,20 @@ jobs:
         id: get_version
         if: startsWith(github.ref, 'refs/tags/')
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        
+      - name: Extract latest version changes from changelog
+        id: extract_changelog
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          VERSION_LINE=$(head -1 CHANGELOG.md | tr -d '\r')
+          echo "Extracting changelog for $VERSION_LINE"
+          
+          # Create a temporary file with only the latest version's changes
+          awk 'NR==1 {print; next} /^[0-9]/ {exit} {print}' CHANGELOG.md > latest_changes.md
+          
+          # Show extracted content for debugging
+          echo "Extracted content:"
+          cat latest_changes.md
 
       - name: Create GitHub Release
         id: create_release
@@ -97,7 +111,7 @@ jobs:
           release_name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
-          body_path: CHANGELOG.md
+          body_path: latest_changes.md
 
       - name: Upload Chrome ZIP to Release
         if: startsWith(github.ref, 'refs/tags/')
