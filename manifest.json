@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AI Tab Manager",
-  "version": "1.4",
+  "version": "1.5",
   "description": "AI-based Tab Manager for grouping similar tabs into workspaces.",
   "permissions": ["tabs", "storage"],
   "host_permissions": ["<all_urls>"],

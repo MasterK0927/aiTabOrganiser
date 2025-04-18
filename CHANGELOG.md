@@ -1,3 +1,7 @@
+19/04/2025 (v1.5)
+
+- Adds option for grouping tabs of select windows
+
 19/04/2025 (v1.4)
 
 - Adds settings page
