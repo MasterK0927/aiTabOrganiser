@@ -36,29 +36,24 @@ const handleMessage = async (message, sender) => {
         }
         
         const rawTabs = await queryTabs(queryOptions);
-        
-        const validTabs = ensureArray(rawTabs).filter(tab =>
-          tab.url &&
-          !tab.url.startsWith("chrome://") &&
-          !tab.url.startsWith("chrome-extension://") &&
-          !tab.url.startsWith("moz-extension://") &&
-          !tab.url.startsWith("about:")
-        );
+        const validTabs = ensureArray(rawTabs);
         
         if (validTabs.length === 0) {
-          throw new Error("No valid tabs found");
+          throw new Error("No tabs found");
         }
         
         const groups = await groupTabsBySimilarity(validTabs);
-        console.log("Groups returned:", groups);
         
         if (!Array.isArray(groups)) {
           throw new Error("Expected an array of groups, but received " + typeof groups);
         }
         
         const workspaces = groups.map(group => ({
-          name: generateWorkspaceName(group.tabs),
-          tabs: group.tabs,
+          name: group.name,
+          tabs: group.tabs.map(apiTab => {
+            const originalTab = validTabs.find(tab => tab.url === apiTab.url && tab.title === apiTab.title);
+            return originalTab || apiTab;  // Fallback to API tab if no match
+          }),
           createdAt: new Date().toISOString()
         }));
         
@@ -152,7 +147,6 @@ const handleMessage = async (message, sender) => {
 
     case "settings_updated":
       try {
-        console.log("Settings updated:", message.settings);
         return { success: true, message: "Settings updated successfully" };
       } catch (error) {
         console.error("Failed to process settings update:", error);
@@ -175,12 +169,10 @@ const handleMessage = async (message, sender) => {
 };
 
 if (isFirefox) {
-  // Firefox listener
   browser.runtime.onMessage.addListener((message, sender) => {
     return handleMessage(message, sender);
   });
 } else {
-  // Chrome listener
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     handleMessage(message, sender)
       .then(response => sendResponse(response))

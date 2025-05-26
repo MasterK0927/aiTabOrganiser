@@ -16,23 +16,16 @@ export const browserAPI = isFirefox ? browser : chrome;
  */
 export function getStorage() {
   try {
-    // For Firefox
     if (typeof browser !== 'undefined' && browser && browser.storage) {
       return browser.storage.local;
-    }
-    // For Chrome
-    else if (typeof chrome !== 'undefined' && chrome && chrome.storage) {
+    } else if (typeof chrome !== 'undefined' && chrome && chrome.storage) {
       return chrome.storage.local;
     }
-    // fallback
-    console.warn("No browser storage API available, returning mock storage");
     return {
       get: (keys, callback) => {
-        console.warn("Using mock storage get");
         callback({});
       },
       set: (items, callback) => {
-        console.warn("Using mock storage set");
         if (callback) callback();
       }
     };
@@ -49,7 +42,7 @@ export function getStorage() {
  */
 export function queryTabsAPI(queryInfo = {}) {
   if (isFirefox) {
-    return browser.tabs.query(queryInfo);
+    return browserAPI.tabs.query(queryInfo);
   } else {
     return new Promise((resolve) => {
       chrome.tabs.query(queryInfo, (tabs) => {
@@ -66,7 +59,7 @@ export function queryTabsAPI(queryInfo = {}) {
  */
 export function createWindow(createProperties) {
   if (isFirefox) {
-    return browser.windows.create(createProperties);
+    return browserAPI.windows.create(createProperties);
   } else {
     return new Promise((resolve) => {
       chrome.windows.create(createProperties, (window) => {
@@ -82,7 +75,7 @@ export function createWindow(createProperties) {
  */
 export function getCurrentWindow() {
   if (isFirefox) {
-    return browser.windows.getCurrent();
+    return browserAPI.windows.getCurrent();
   } else {
     return new Promise((resolve) => {
       chrome.windows.getCurrent((window) => {
@@ -98,7 +91,7 @@ export function getCurrentWindow() {
  */
 export function getAllWindows() {
   if (isFirefox) {
-    return browser.windows.getAll({ populate: true });
+    return browserAPI.windows.getAll({ populate: true });
   } else {
     return new Promise((resolve) => {
       chrome.windows.getAll({ populate: true }, (windows) => {
@@ -115,7 +108,6 @@ export function getAllWindows() {
  */
 export function createTabGroup(options) {
   if (isFirefox) {
-    console.log("Tab grouping not supported in Firefox");
     return Promise.resolve(-1);
   } else {
     return new Promise((resolve) => {
@@ -133,21 +125,19 @@ export function createTabGroup(options) {
  * @returns {Promise<void>}
  */
 export function updateTabGroup(groupId, options) {
-    if (isFirefox) {
-      console.log("Tab group updating not supported in Firefox");
-      return Promise.resolve();
-    } else {
-      return new Promise((resolve) => {
-        if (chrome.tabGroups) {
-          chrome.tabGroups.update(groupId, options, () => {
-            resolve();
-          });
-        } else {
-          console.warn("Tab groups API not available in this browser");
+  if (isFirefox) {
+    return Promise.resolve();
+  } else {
+    return new Promise((resolve) => {
+      if (chrome.tabGroups) {
+        chrome.tabGroups.update(groupId, options, () => {
           resolve();
-        }
-      });
-    }
+        });
+      } else {
+        resolve();
+      }
+    });
+  }
 }
 
 /**
@@ -157,8 +147,6 @@ export function updateTabGroup(groupId, options) {
  */
 export function ungroupTabs(tabIds) {
   if (isFirefox) {
-    // Firefox doesn't support tab groups natively
-    console.log("Tab ungrouping not supported in Firefox");
     return Promise.resolve();
   } else {
     return new Promise((resolve) => {
@@ -178,12 +166,10 @@ export function sendMessage(message) {
   return new Promise((resolve, reject) => {
     try {
       if (typeof browser !== 'undefined' && browser.runtime) {
-        // Firefox
         browser.runtime.sendMessage(message)
           .then(resolve)
           .catch(reject);
       } else if (typeof chrome !== 'undefined' && chrome.runtime) {
-        // Chrome
         chrome.runtime.sendMessage(message, (response) => {
           if (chrome.runtime.lastError) {
             reject(chrome.runtime.lastError);
@@ -216,7 +202,7 @@ export function getURL(path) {
  */
 export function removeTabs(tabIds) {
   if (isFirefox) {
-    return browser.tabs.remove(tabIds);
+    return browserAPI.tabs.remove(tabIds);
   } else {
     return new Promise((resolve) => {
       chrome.tabs.remove(tabIds, () => {
@@ -233,7 +219,7 @@ export function removeTabs(tabIds) {
  */
 export function createTab(createProperties) {
   if (isFirefox) {
-    return browser.tabs.create(createProperties);
+    return browserAPI.tabs.create(createProperties);
   } else {
     return new Promise((resolve) => {
       chrome.tabs.create(createProperties, (tab) => {
@@ -249,13 +235,13 @@ export function createTab(createProperties) {
  * @returns {Promise<void>} - Promise resolving when the tab is activated
  */
 export function activateTab(tabId) {
-    if (isFirefox) {
-      return browser.tabs.update(tabId, { active: true });
-    } else {
-      return new Promise((resolve) => {
-        chrome.tabs.update(tabId, { active: true }, () => {
-          resolve();
-        });
+  if (isFirefox) {
+    return browserAPI.tabs.update(tabId, { active: true });
+  } else {
+    return new Promise((resolve) => {
+      chrome.tabs.update(tabId, { active: true }, () => {
+        resolve();
       });
-    }
+    });
   }
+}

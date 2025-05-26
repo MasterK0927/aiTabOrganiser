@@ -2,3 +2,11 @@ node_modules
 release-key.pem
 package-lock.json
 dist
+_pycache__/
+*.pyc
+.venv/
+.idea/
+.vscode/
+*.log
+*.swp
+.env

@@ -3,7 +3,7 @@
   "name": "AI Tab Manager",
   "version": "1.5",
   "description": "AI-based Tab Manager for grouping similar tabs into workspaces.",
-  "permissions": ["tabs", "storage"],
+  "permissions": ["tabs", "storage", "activeTab", "scripting"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js",
