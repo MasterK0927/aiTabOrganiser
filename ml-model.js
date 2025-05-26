@@ -6,7 +6,7 @@ const DEFAULT_PATH_WEIGHT = 0.3;
 const DEFAULT_TITLE_WEIGHT = 0.1;
 const DEFAULT_MIN_WORKSPACE_SIZE = 2;
 
-const API_ENDPOINT = 'https://tab-grouping-api.onrender.com/group-tabs';  // Replace with your actual Render URL
+const API_ENDPOINT = 'https://aitaborganiser.onrender.com/group-tabs';  // Replace with your actual Render URL
 
 async function loadSettings() {
   return new Promise((resolve) => {
